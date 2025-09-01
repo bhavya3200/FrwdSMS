@@ -29,6 +29,36 @@ class MainActivity : AppCompatActivity() {
                 else -> getString(R.string.tab_settings)
             }
         }.attach()
+        private fun isNotifListenerEnabled(): Boolean {
+    val cn = android.content.ComponentName(this, SmsNotificationListener::class.java)
+    val enabled = android.provider.Settings.Secure
+        .getString(contentResolver, "enabled_notification_listeners")
+        ?.split(":")
+        ?.any { it.equals(cn.flattenToString(), ignoreCase = true) } == true
+    return enabled
+}
+
+private fun promptEnableNotifListener() {
+    val dlg = androidx.appcompat.app.AlertDialog.Builder(this)
+        .setTitle("Enable Notification Access")
+        .setMessage("To forward SMS using notification reading (Play Store–friendly), please enable notification access for SMS Relay.")
+        .setPositiveButton("Open Settings") { _, _ ->
+            startActivity(android.content.Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+        }
+        .setNegativeButton("Later", null)
+        .create()
+    dlg.show()
+}
+
+private fun ensurePostNotificationsPermission() {
+    if (android.os.Build.VERSION.SDK_INT >= 33) {
+        val perm = android.Manifest.permission.POST_NOTIFICATIONS
+        if (checkSelfPermission(perm) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(perm), 1001)
+        }
+    }
+}
+
 
         ForwardService.start(this)
     }
