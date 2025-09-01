@@ -30,12 +30,14 @@ class MainActivity : AppCompatActivity() {
             }
         }.attach()
 
-        ensurePostNotificationsPermission()
+        val hasNotifPerm = ensurePostNotificationsPermission()
         if (!isNotifListenerEnabled()) {
             promptEnableNotifListener()
         }
 
-        ForwardService.start(this)
+        if (hasNotifPerm) {
+            ForwardService.start(this)
+        }
     }
 
     private fun isNotifListenerEnabled(): Boolean {
@@ -61,12 +63,27 @@ class MainActivity : AppCompatActivity() {
         dlg.show()
     }
 
-    private fun ensurePostNotificationsPermission() {
+    private fun ensurePostNotificationsPermission(): Boolean {
         if (android.os.Build.VERSION.SDK_INT >= 33) {
             val perm = android.Manifest.permission.POST_NOTIFICATIONS
             if (checkSelfPermission(perm) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(perm), 1001)
+                return false
             }
+        }
+        return true
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 1001 && grantResults.isNotEmpty() &&
+            grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            ForwardService.start(this)
         }
     }
 }
