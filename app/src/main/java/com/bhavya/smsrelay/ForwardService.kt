@@ -19,7 +19,11 @@ class ForwardService : Service() {
         fun updateCounter(ctx: Context, count: Int) {
             val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (Build.VERSION.SDK_INT >= 26) {
-                val ch = NotificationChannel(CH_ID, "SMS Forwarder Service", NotificationManager.IMPORTANCE_LOW)
+                val ch = NotificationChannel(
+                    CH_ID,
+                    "SMS Relay Service",
+                    NotificationManager.IMPORTANCE_LOW
+                )
                 nm.createNotificationChannel(ch)
             }
             val pi = PendingIntent.getActivity(
@@ -27,9 +31,9 @@ class ForwardService : Service() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
             val notif = NotificationCompat.Builder(ctx, CH_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)   // ✅ icon required
                 .setContentTitle("SMS Relay running")
-                .setContentText("${count} messages forwarded")
+                .setContentText("$count messages forwarded")
                 .setOngoing(true)
                 .setContentIntent(pi)
                 .build()
@@ -40,12 +44,33 @@ class ForwardService : Service() {
     override fun onCreate() {
         super.onCreate()
         val sent = getSharedPreferences("cfg", 0).getInt("sentCount", 0)
+
+        // ✅ Always create a proper notification BEFORE startForeground on API 26+
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26) {
-            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val ch = NotificationChannel(CH_ID, "SMS Forwarder Service", NotificationManager.IMPORTANCE_LOW)
+            val ch = NotificationChannel(
+                CH_ID, "SMS Relay Service",
+                NotificationManager.IMPORTANCE_LOW
+            )
             nm.createNotificationChannel(ch)
-            startForeground(NOTIF_ID, NotificationCompat.Builder(this, CH_ID).build())
         }
+        val pi = PendingIntent.getActivity(
+            this, 0, Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val initial = NotificationCompat.Builder(this, CH_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)       // ✅ icon required
+            .setContentTitle("SMS Relay running")
+            .setContentText("$sent messages forwarded")
+            .setOngoing(true)
+            .setContentIntent(pi)
+            .build()
+
+        if (Build.VERSION.SDK_INT >= 26) {
+            startForeground(NOTIF_ID, initial)
+        }
+
+        // keep it in sync
         updateCounter(this, sent)
     }
 
