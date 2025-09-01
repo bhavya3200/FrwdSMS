@@ -61,5 +61,12 @@
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
           android:layout_marginTop="12dp"/>
+      <Button
+    android:id="@+id/btnGrantNotifAccess"
+    android:text="Grant Notification Access"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"/>
+
   </LinearLayout>
 </ScrollView>
