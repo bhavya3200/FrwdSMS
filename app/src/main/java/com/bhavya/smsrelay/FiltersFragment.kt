@@ -37,6 +37,15 @@ class FiltersFragment : Fragment() {
                 .apply()
             Toast.makeText(requireContext(), "Saved", Toast.LENGTH_SHORT).show()
         }
+        // inside onCreateView(...) after inflating and reading prefs:
+b.btnGrantNotifAccess.setOnClickListener {
+    // Deep link to Notification Listener settings
+    val i = android.content.Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+    startActivity(i)
+    android.widget.Toast.makeText(requireContext(),
+        "Enable notification access for SMS Relay", android.widget.Toast.LENGTH_LONG).show()
+}
+
         return b.root
     }
 
